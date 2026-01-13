@@ -165,3 +165,4 @@ C:\Users\lukeg\Cursor\TransactionAPI\bin\Debug\net8.0\runtimes\win-arm\native\e_
 C:\Users\lukeg\Cursor\TransactionAPI\bin\Debug\net8.0\runtimes\win-arm64\native\e_sqlite3.dll
 C:\Users\lukeg\Cursor\TransactionAPI\bin\Debug\net8.0\runtimes\win-x64\native\e_sqlite3.dll
 C:\Users\lukeg\Cursor\TransactionAPI\bin\Debug\net8.0\runtimes\win-x86\native\e_sqlite3.dll
+C:\Users\lukeg\Cursor\TransactionAPI\obj\Debug\net8.0\TransactionAPI.sourcelink.json

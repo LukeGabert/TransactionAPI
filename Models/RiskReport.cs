@@ -29,6 +29,12 @@ public class RiskReport
     [MaxLength(1000)]
     public string? RecommendedMitigation { get; set; }
 
+    [MaxLength(2000)]
+    public string? Reasoning { get; set; }
+
+    [MaxLength(500)]
+    public string? TLDR { get; set; }
+
     // Navigation property
     [ForeignKey("TransactionID")]
     public virtual Transaction? Transaction { get; set; }

@@ -23,6 +23,8 @@ export interface RiskReport {
   riskLevel: RiskLevel | number; // Accept both string and number from API
   detectedAnomaly: string | null;
   recommendedMitigation: string | null;
+  reasoning: string | null;
+  tldr: string | null;
   transaction?: {
     transactionID: string;
     accountID: string;

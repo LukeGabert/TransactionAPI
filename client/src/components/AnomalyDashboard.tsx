@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react';
-import { AlertTriangle, AlertCircle, Info, Loader2, Search, ShieldAlert, CheckCircle, Database, AlertTriangle as AlertIcon, CheckCircle2 } from 'lucide-react';
+import { AlertTriangle, AlertCircle, Info, Loader2, Search, ShieldAlert, CheckCircle, Database, AlertTriangle as AlertIcon, CheckCircle2, X } from 'lucide-react';
 import { riskReportService } from '../services/riskReportService';
 import { transactionService } from '../services/transactionService';
 import type { RiskReport, RiskLevel } from '../types/riskReport';
@@ -16,6 +16,7 @@ const AnomalyDashboard = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [totalResolved, setTotalResolved] = useState<number>(0);
   const [totalTransactionsScanned, setTotalTransactionsScanned] = useState<number>(0);
+  const [selectedTransaction, setSelectedTransaction] = useState<RiskReport | null>(null);
 
   useEffect(() => {
     fetchRiskReports();
@@ -41,7 +42,7 @@ const AnomalyDashboard = () => {
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-orange-100 text-orange-800 border border-orange-300">
             <ShieldAlert size={16} />
-            High Risk
+            High
           </span>
         );
       case 'Medium':
@@ -76,6 +77,8 @@ const AnomalyDashboard = () => {
         report.transactionID.toLowerCase().includes(query) ||
         report.detectedAnomaly?.toLowerCase().includes(query) ||
         report.recommendedMitigation?.toLowerCase().includes(query) ||
+        report.reasoning?.toLowerCase().includes(query) ||
+        report.tldr?.toLowerCase().includes(query) ||
         transaction?.merchant?.toLowerCase().includes(query) ||
         transaction?.category?.toLowerCase().includes(query) ||
         transaction?.location?.toLowerCase().includes(query) ||
@@ -120,8 +123,8 @@ const AnomalyDashboard = () => {
       });
       // Refresh the risk reports list after scan
       await fetchRiskReports();
-    } catch (err: any) {
-      const errorMessage = err?.response?.data?.detail || err?.message || 'Unknown error occurred';
+    } catch (err) {
+      const errorMessage = (err as { response?: { data?: { detail?: string } }; message?: string })?.response?.data?.detail || (err as { message?: string })?.message || 'Unknown error occurred';
       
       // Provide user-friendly error messages based on error type
       let userMessage = 'Failed to scan transactions. ';
@@ -297,25 +300,25 @@ const AnomalyDashboard = () => {
             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
               <thead className="bg-gray-50 dark:bg-gray-900/50">
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Transaction ID
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Risk Level
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Merchant
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Amount
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                    Detected Anomaly
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                    Risk Summary
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     AI-Recommended Mitigation
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                     Actions
                   </th>
                 </tr>
@@ -324,7 +327,8 @@ const AnomalyDashboard = () => {
               {filteredRiskReports.map((report) => (
                 <tr
                   key={report.reportID}
-                  className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors"
+                  onClick={() => setSelectedTransaction(report)}
+                  className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors cursor-pointer"
                 >
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm font-medium text-gray-900 dark:text-white">
@@ -348,6 +352,9 @@ const AnomalyDashboard = () => {
                         <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                           {report.transaction.category}
                         </div>
+                        <div className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                          {report.transaction.location}
+                        </div>
                       </div>
                     ) : (
                       <span className="text-sm text-gray-500 dark:text-gray-400">N/A</span>
@@ -363,9 +370,9 @@ const AnomalyDashboard = () => {
                     )}
                   </td>
                   <td className="px-6 py-4">
-                    <div className="text-sm text-gray-900 dark:text-white max-w-xs">
-                      {report.detectedAnomaly || (
-                        <span className="text-gray-400 dark:text-gray-500">No details</span>
+                    <div className="text-xs font-bold text-gray-900 dark:text-white max-w-xs">
+                      {report.tldr || (
+                        <span className="text-gray-400 dark:text-gray-500 font-normal">No summary</span>
                       )}
                     </div>
                   </td>
@@ -403,6 +410,154 @@ const AnomalyDashboard = () => {
         </div>
       )}
       </div>
+
+      {/* Sliding Sidebar */}
+      <div
+        className={`fixed top-0 right-0 h-full w-full max-w-lg bg-white dark:bg-gray-800 shadow-2xl z-50 transform transition-transform duration-300 ease-in-out ${
+          selectedTransaction ? 'translate-x-0' : 'translate-x-full'
+        }`}
+      >
+        {selectedTransaction && (
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+                Transaction Details
+              </h2>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTransaction(null);
+                }}
+                className="p-2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="flex-1 overflow-y-auto p-6">
+              {/* Transaction Info */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                  Transaction Information
+                </h3>
+                <div className="space-y-3">
+                  <div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Transaction ID:</span>
+                    <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                      {selectedTransaction.transactionID}
+                    </p>
+                  </div>
+                  {selectedTransaction.transaction && (
+                    <>
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Merchant:</span>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                          {selectedTransaction.transaction.merchant}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Amount:</span>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                          {formatCurrency(selectedTransaction.transaction.amount)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Category:</span>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                          {selectedTransaction.transaction.category}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Date:</span>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                          {formatDate(selectedTransaction.transaction.timestamp)}
+                        </p>
+                      </div>
+                      <div>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">Location:</span>
+                        <p className="text-sm font-medium text-gray-900 dark:text-white mt-1">
+                          {selectedTransaction.transaction.location}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  <div>
+                    <span className="text-sm text-gray-500 dark:text-gray-400">Risk Level:</span>
+                    <div className="mt-1">
+                      {getRiskBadge(mapRiskLevel(selectedTransaction.riskLevel))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Audit Section */}
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                  AI Audit
+                </h3>
+                <div className="bg-gray-50 dark:bg-gray-900/50 rounded-md p-4">
+                  {selectedTransaction.reasoning ? (
+                    <p className="text-sm text-gray-900 dark:text-white whitespace-pre-wrap">
+                      {selectedTransaction.reasoning}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                      No reasoning provided
+                    </p>
+                  )}
+                </div>
+              </div>
+
+              {/* Additional Details */}
+              {selectedTransaction.recommendedMitigation && (
+                <div className="mb-6">
+                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
+                    Recommended Mitigation
+                  </h3>
+                  <p className="text-sm text-gray-900 dark:text-white">
+                    {selectedTransaction.recommendedMitigation}
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer with Buttons */}
+            <div className="border-t border-gray-200 dark:border-gray-700 p-6 flex gap-3">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setSelectedTransaction(null);
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedTransaction) {
+                    handleResolve(selectedTransaction.reportID);
+                    setSelectedTransaction(null);
+                  }
+                }}
+                className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 transition-colors"
+              >
+                Acknowledge
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Backdrop */}
+      {selectedTransaction && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40"
+          onClick={() => setSelectedTransaction(null)}
+        />
+      )}
     </>
   );
 };

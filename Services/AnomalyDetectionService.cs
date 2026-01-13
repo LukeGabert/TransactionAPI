@@ -102,7 +102,7 @@ public class AnomalyDetectionService
                 new
                 {
                     role = "system",
-                    content = "You are a Financial Risk Auditor with expertise in detecting fraudulent and suspicious financial transactions. Analyze transactions carefully and identify any anomalies."
+                    content = "You are a Forensic Financial Auditor with expertise in detecting fraudulent and suspicious financial transactions. Analyze transactions carefully and identify any anomalies using systematic forensic analysis."
                 },
                 new
                 {
@@ -184,7 +184,7 @@ public class AnomalyDetectionService
     /// </summary>
     private string CreatePrompt(string transactionsJson)
     {
-        return $@"You are a Financial Risk Auditor. Analyze the following transactions and identify any that appear suspicious or anomalous.
+        return $@"You are a Forensic Financial Auditor. Analyze the following transactions and identify any that appear suspicious or anomalous using systematic forensic analysis.
 
 Consider factors such as:
 - Unusually high transaction amounts
@@ -202,18 +202,30 @@ For each suspicious transaction, return a JSON object with the following structu
     {{
       ""TransactionID"": ""string"",
       ""RiskLevel"": ""Low"" | ""Medium"" | ""High"",
-      ""MitigationStrategy"": ""string""
+      ""MitigationStrategy"": ""string"",
+      ""Reasoning"": ""string"",
+      ""tldr"": ""string""
     }}
   ]
 }}
 
 RiskLevel should be one of: Low, Medium, or High.
-MitigationStrategy should be a clear recommendation such as:
+
+MitigationStrategy should be a clear, concise recommendation such as:
 - ""Flag for manual review""
 - ""Temporarily freeze account""
 - ""Request additional verification""
 - ""Monitor account activity""
 - Or other appropriate mitigation strategies
+
+Reasoning must follow a Chain of Thought (CoT) pattern with three components (keep it concise and professional):
+1. Observation: What specific data point looks odd?
+2. Context: Why is this unusual for this specific account or category?
+3. Risk: What is the potential impact (e.g., suspected account takeover, duplicate billing)?
+
+Example Reasoning format: ""Observation: Transaction amount of $15,000 is 50x the account's average. Context: Account typically shows $50-200 grocery transactions. Risk: Potential account takeover or unauthorized large purchase.""
+
+tldr should be a brief summary of the anomaly (maximum 5 words). Example: ""$15,000 transaction exceeds account average""
 
 Only include transactions that you identify as suspicious. If no transactions are suspicious, return an empty array.
 
@@ -277,6 +289,8 @@ Return ONLY valid JSON, no additional text or explanation.";
                 existingReport.RiskLevel = ParseRiskLevel(assessment.RiskLevel);
                 existingReport.DetectedAnomaly = $"Risk assessment: {assessment.RiskLevel}";
                 existingReport.RecommendedMitigation = assessment.MitigationStrategy;
+                existingReport.Reasoning = assessment.Reasoning;
+                existingReport.TLDR = assessment.TLDR;
                 _context.RiskReports.Update(existingReport);
                 updatedCount++;
             }
@@ -288,7 +302,9 @@ Return ONLY valid JSON, no additional text or explanation.";
                     TransactionID = assessment.TransactionID,
                     RiskLevel = ParseRiskLevel(assessment.RiskLevel),
                     DetectedAnomaly = $"Risk assessment: {assessment.RiskLevel}",
-                    RecommendedMitigation = assessment.MitigationStrategy
+                    RecommendedMitigation = assessment.MitigationStrategy,
+                    Reasoning = assessment.Reasoning,
+                    TLDR = assessment.TLDR
                 };
                 reportsToAdd.Add(riskReport);
             }
@@ -353,6 +369,12 @@ Return ONLY valid JSON, no additional text or explanation.";
 
         [JsonPropertyName("MitigationStrategy")]
         public string MitigationStrategy { get; set; } = string.Empty;
+
+        [JsonPropertyName("Reasoning")]
+        public string? Reasoning { get; set; }
+
+        [JsonPropertyName("tldr")]
+        public string? TLDR { get; set; }
     }
 
     #endregion

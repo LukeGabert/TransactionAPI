@@ -43,6 +43,8 @@ public class ApplicationDbContext : DbContext
             entity.Property(e => e.TransactionID).HasMaxLength(50).IsRequired();
             entity.Property(e => e.DetectedAnomaly).HasMaxLength(500);
             entity.Property(e => e.RecommendedMitigation).HasMaxLength(1000);
+            entity.Property(e => e.Reasoning).HasMaxLength(2000);
+            entity.Property(e => e.TLDR).HasMaxLength(500);
             entity.Property(e => e.RiskLevel).IsRequired();
         });
     }

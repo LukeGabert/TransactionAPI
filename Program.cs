@@ -93,6 +93,8 @@ app.MapGet("/api/risk-reports", async (ApplicationDbContext db) =>
                 riskLevel = r.RiskLevel.ToString(),
                 detectedAnomaly = r.DetectedAnomaly,
                 recommendedMitigation = r.RecommendedMitigation,
+                reasoning = r.Reasoning,
+                tldr = r.TLDR,
                 transaction = r.Transaction != null ? new
                 {
                     transactionID = r.Transaction.TransactionID,
@@ -140,6 +142,8 @@ app.MapGet("/api/risk-reports/{id}", async (int id, ApplicationDbContext db) =>
         riskLevel = riskReport.RiskLevel.ToString(),
         detectedAnomaly = riskReport.DetectedAnomaly,
         recommendedMitigation = riskReport.RecommendedMitigation,
+        reasoning = riskReport.Reasoning,
+        tldr = riskReport.TLDR,
         transaction = riskReport.Transaction != null ? new
         {
             transactionID = riskReport.Transaction.TransactionID,
