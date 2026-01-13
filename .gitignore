@@ -1,0 +1,63 @@
+## .NET
+bin/
+obj/
+*.user
+*.suo
+*.cache
+*.dll
+*.exe
+*.pdb
+*.db
+*.db-shm
+*.db-wal
+
+## Visual Studio
+.vs/
+*.userprefs
+*.sln.docstates
+
+## User-specific files
+*.rsuser
+*.user
+
+## Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+[Aa]rm/
+[Aa]rm64/
+bld/
+[Bb]in/
+[Oo]bj/
+[Ll]og/
+
+## Database files
+*.db
+*.db-shm
+*.db-wal
+TransactionDB.db*
+
+## User secrets
+appsettings.Development.json
+
+## Node modules (client)
+client/node_modules/
+client/dist/
+client/.vite/
+
+## Environment files
+.env
+.env.local
+.env.*.local
+
+## IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+## OS
+.DS_Store
+Thumbs.db
